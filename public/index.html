@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>شهرداری اشنویه</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="font-sans bg-gray-100">
+  <header class="bg-blue-800 text-white p-4">
+    <h1 class="text-2xl">شهرداری اشنویه</h1>
+  </header>
+  <main class="p-4">
+    <section class="mb-6">
+      <img src="/images/oshnavieh.svg" alt="اشنویه" class="mx-auto rounded shadow-md" />
+      <p class="mt-4 text-justify">
+        شهر اشنویه در استان آذربایجان غربی قرار دارد و دارای طبیعت بسیار زیبا و مردم
+        مهمان‌نواز است.
+      </p>
+    </section>
+      <section>
+        <h2 class="text-xl font-bold mb-2">اخبار تازه</h2>
+        <article class="bg-white p-4 rounded shadow">
+          <h3 class="font-semibold">برگزاری جشنواره فرهنگی</h3>
+          <p class="text-sm mt-2">
+            در پارک اصلی شهر اشنویه جشنواره‌ای با حضور هنرمندان محلی برگزار شد.
+          </p>
+        </article>
+      </section>
+      <section id="comments" class="mt-6">
+        <h2 class="text-xl font-bold mb-2">نظرات مردم</h2>
+        <form id="commentForm" class="mb-4">
+          <textarea id="commentText" class="w-full p-2 border rounded" placeholder="نظر خود را بنویسید"></textarea>
+          <button type="submit" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded">ارسال</button>
+        </form>
+        <div id="commentsList"></div>
+      </section>
+    </main>
+    <footer class="text-center p-4 text-xs text-gray-500">
+      &copy; 2025 شهرداری اشنویه
+    </footer>
+    <script>
+      async function loadComments() {
+        const res = await fetch('/api/posts/1/comments');
+        const data = await res.json();
+        const container = document.getElementById('commentsList');
+        container.innerHTML = '';
+        data.forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'bg-white p-2 rounded shadow mb-2';
+          div.innerHTML = `<p>${c.text}</p>
+            <button data-id="${c.id}" class="like px-2 text-green-600">👍 ${c.likes}</button>
+            <button data-id="${c.id}" class="dislike px-2 text-red-600">👎 ${c.dislikes}</button>`;
+          container.appendChild(div);
+        });
+      }
+      document.getElementById('commentForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const text = document.getElementById('commentText').value.trim();
+        if (!text) return;
+        await fetch('/api/posts/1/comments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        document.getElementById('commentText').value = '';
+        loadComments();
+      });
+      document.getElementById('commentsList').addEventListener('click', async e => {
+        if (e.target.classList.contains('like')) {
+          await fetch(`/api/comments/${e.target.dataset.id}/like`, { method: 'POST' });
+          loadComments();
+        }
+        if (e.target.classList.contains('dislike')) {
+          await fetch(`/api/comments/${e.target.dataset.id}/dislike`, { method: 'POST' });
+          loadComments();
+        }
+      });
+      loadComments();
+    </script>
+  </body>
+  </html>
